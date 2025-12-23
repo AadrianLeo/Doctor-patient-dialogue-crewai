@@ -19,11 +19,12 @@ def run():
     """
     dialogue = """
     [doctor] Hello, how are you?
-    [patient] I'm feeling a bit unwell.
-    [doctor] Can you tell me more about your symptoms?
     [patient] I've had back pain for four days after lifting boxes.
-    [doctor] On physical exam, your lower back is tender.   
-    [doctor] Your blood pressure is slightly elevated. 
+    [patient] I was diagnosed with diabetes two years ago.
+    [patient] I take metformin daily.
+    [patient] My father had heart disease.
+    [doctor] On physical exam, your back is tender.
+    [doctor] Your blood pressure is slightly elevated.
     """
 
     inputs = {

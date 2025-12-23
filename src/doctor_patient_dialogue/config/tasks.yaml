@@ -24,33 +24,55 @@ subjective_task:
   context:
     - parse_dialogue_task
 
+history_subjective_task:
+  description: >
+    Extract patient-reported medical, medication, family, and social history.
+    Use ONLY patient utterances from parsed dialogue.
+    You MUST call history_subjective_extractor exactly once.
+    Return ONLY the tool output JSON.
+  expected_output: >
+    JSON with past_medical_history, medications, family_history,
+    social_history, and additional_notes.
+  agent: history_subjective_agent
+  context:
+    - parse_dialogue_task
+
+
+
 
 objective_task:
   description: >
     Extract objective clinical findings ONLY from clinician statements.
-    Do NOT infer, assume, or hallucinate any values.
-    If a finding is not explicitly stated by the clinician, leave it empty.
-    You MUST call the objective_extractor tool exactly once.
+    Do NOT infer or add information.
+    You MUST call objective_extractor exactly once.
     Return ONLY the tool output JSON.
   expected_output: >
-    JSON with vitals, physical_exam, lab_results, imaging_results, additional_notes.
+    JSON with vitals, physical_exam, lab_results,
+    imaging_results, and additional_notes.
   agent: objective_agent
   context:
     - parse_dialogue_task
-    - subjective_task
+
+
 
 
 assessment_plan_task:
   description: >
-    Generate a cautious assessment and plan.
-    Base your reasoning ONLY on the dialogue and extracted findings.
-    If insufficient evidence exists, say "insufficient information".
-    Do NOT recommend specific tests unless explicitly discussed.
+    Generate an assessment and plan using ONLY the outputs of previous tasks.
+    STRICT RULES:
+    - Do NOT add diagnoses.
+    - Do NOT recommend tests, referrals, or treatments.
+    - Do NOT infer risks or future actions.
+    - Every assessment item MUST cite supporting evidence from extracted text.
+    - If evidence is insufficient, output "insufficient information" for the plan.
   expected_output: >
     JSON with:
-    - assessment: list of likely problems or diagnoses
-    - plan: list of recommended next steps
+    - assessment: list of objects with fields:
+        - problem
+        - supporting_evidence (list of exact phrases)
+    - plan: either "insufficient information" OR a list of next steps explicitly stated in dialogue.
   agent: assessment_plan_agent
   context:
     - subjective_task
     - objective_task
+

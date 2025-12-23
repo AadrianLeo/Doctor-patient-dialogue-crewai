@@ -1,47 +1,89 @@
 from crewai.tools import BaseTool
 from typing import Type, List, Dict
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import re
 
 
+# =========================
+# Validator
+# =========================
+
+class DialogueFormatError(ValueError):
+    """Raised when dialogue format is invalid."""
+    pass
+
+
+def validate_dialogue_format(dialogue: str) -> List[str]:
+    """
+    Validate that the dialogue is line-based and properly tagged.
+
+    Expected format:
+    [doctor] ...
+    [patient] ...
+
+    Returns validated dialogue lines.
+    Raises DialogueFormatError if invalid.
+    """
+    if not dialogue or not dialogue.strip():
+        raise DialogueFormatError("Dialogue input is empty.")
+
+    lines = [line.strip() for line in dialogue.splitlines() if line.strip()]
+
+    if not lines:
+        raise DialogueFormatError("Dialogue contains no valid lines.")
+
+    pattern = re.compile(r"^\[(doctor|patient)\]\s+.+", re.IGNORECASE)
+
+    for line in lines:
+        if not pattern.match(line):
+            raise DialogueFormatError(
+                f"Invalid dialogue line format: '{line}'. "
+                "Expected format: [doctor] ... or [patient] ..."
+            )
+
+    return lines
+
+
+# =========================
+# Tool Input Schema
+# =========================
+
 class DialogueParserInput(BaseModel):
+    """Input schema for Dialogue Parser Tool."""
     dialogue: str = Field(
         ...,
-        description="Raw doctor–patient dialogue with [doctor] and [patient] tags."
+        description="Doctor–patient dialogue with one utterance per line, "
+                    "each starting with [doctor] or [patient]."
     )
 
-    @validator("dialogue")
-    def validate_dialogue_format(cls, v):
-        if not re.search(r"\[(doctor|patient)\]", v, re.IGNORECASE):
-            raise ValueError(
-                "Dialogue must contain at least one [doctor] or [patient] tag."
-            )
-        return v
 
+# =========================
+# Dialogue Parser Tool
+# =========================
 
 class DialogueParserTool(BaseTool):
     name: str = "dialogue_parser"
     description: str = (
-        "Parses raw doctor–patient dialogue into structured speaker turns. "
-        "Extractive only. No interpretation."
+        "Parses validated doctor–patient dialogue into structured speaker turns. "
+        "This tool is strictly structural and performs no medical reasoning."
     )
     args_schema: Type[BaseModel] = DialogueParserInput
 
     def _run(self, dialogue: str) -> List[Dict[str, str]]:
-        """
-        Handles multiple speaker turns on the SAME line or across lines.
-        """
-        pattern = re.compile(r"\[(doctor|patient)\]\s*([^[]+)", re.IGNORECASE)
-        turns = []
+        # 1️⃣ Validate dialogue format
+        lines = validate_dialogue_format(dialogue)
 
-        for match in pattern.finditer(dialogue):
-            speaker = match.group(1).lower()
-            text = match.group(2).strip()
+        # 2️⃣ Parse validated lines
+        parsed_turns = []
+        pattern = re.compile(r"^\[(doctor|patient)\]\s+(.*)", re.IGNORECASE)
 
-            if text:
-                turns.append({
-                    "speaker": speaker,
-                    "text": text
-                })
+        for line in lines:
+            match = pattern.match(line)
+            speaker, text = match.groups()
 
-        return turns
+            parsed_turns.append({
+                "speaker": speaker.lower(),
+                "text": text.strip()
+            })
+
+        return parsed_turns

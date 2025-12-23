@@ -6,6 +6,8 @@ from typing import List
 from doctor_patient_dialogue.tools.dialogue_parser import DialogueParserTool
 from doctor_patient_dialogue.tools.subjective_tool import SubjectiveExtractorTool
 from doctor_patient_dialogue.tools.objective_tool import ObjectiveExtractorTool
+from doctor_patient_dialogue.tools.history_subjective_tool import HistorySubjectiveExtractorTool
+
 
 
 
@@ -48,6 +50,24 @@ class DoctorPatientDialogue():
         return Task(
             config=self.tasks_config["subjective_task"]
         )
+    
+    @agent
+    def history_subjective_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config["history_subjective_agent"],
+            tools=[HistorySubjectiveExtractorTool()],
+            verbose=True,
+            max_iter=1,
+            allow_delegation=False
+        )
+    
+    @task
+    def history_subjective_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["history_subjective_task"]
+        )
+
+
     
     @agent
     def objective_agent(self) -> Agent:
