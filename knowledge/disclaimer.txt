@@ -1,0 +1,8 @@
+This system is intended for research and educational purposes only.
+
+It assists in structuring and summarizing clinician–patient dialogues
+into draft clinical documentation.
+
+The system does not provide medical advice, diagnosis, or treatment.
+All generated content must be reviewed by a qualified healthcare
+professional before any clinical use.

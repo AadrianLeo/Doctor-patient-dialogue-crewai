@@ -1,0 +1,56 @@
+parse_dialogue_task:
+  description: >
+    Parse the following dialogue into structured speaker turns:
+
+    {dialogue}
+
+    You MUST call the dialogue_parser tool exactly once
+    and return its output.
+  expected_output: >
+    A list of objects with keys: speaker and text.
+  agent: dialogue_parser_agent
+
+
+subjective_task:
+  description: >
+    Extract subjective clinical findings from the parsed dialogue ONLY.
+    You are given structured speaker turns.
+    You MUST NOT call dialogue_parser.
+    You MUST call subjective_extractor exactly once.
+    Return ONLY the tool output JSON.
+  expected_output: >
+    JSON with symptoms, duration, severity, additional_notes.
+  agent: subjective_agent
+  context:
+    - parse_dialogue_task
+
+
+objective_task:
+  description: >
+    Extract objective clinical findings ONLY from clinician statements.
+    Do NOT infer, assume, or hallucinate any values.
+    If a finding is not explicitly stated by the clinician, leave it empty.
+    You MUST call the objective_extractor tool exactly once.
+    Return ONLY the tool output JSON.
+  expected_output: >
+    JSON with vitals, physical_exam, lab_results, imaging_results, additional_notes.
+  agent: objective_agent
+  context:
+    - parse_dialogue_task
+    - subjective_task
+
+
+assessment_plan_task:
+  description: >
+    Generate a cautious assessment and plan.
+    Base your reasoning ONLY on the dialogue and extracted findings.
+    If insufficient evidence exists, say "insufficient information".
+    Do NOT recommend specific tests unless explicitly discussed.
+  expected_output: >
+    JSON with:
+    - assessment: list of likely problems or diagnoses
+    - plan: list of recommended next steps
+  agent: assessment_plan_agent
+  context:
+    - subjective_task
+    - objective_task

@@ -1,0 +1,58 @@
+Chief_Complaint:
+  include:
+    - primary symptom
+    - reason for visit
+  exclude:
+    - diagnoses
+    - treatment decisions
+    - laboratory results
+
+History_of_Present_Illness:
+  include:
+    - symptom onset
+    - duration
+    - severity
+    - progression
+    - associated symptoms
+    - relevant activities or context
+  exclude:
+    - physical exam findings
+    - lab values
+    - final diagnoses
+
+Review_of_Systems:
+  include:
+    - patient-reported positives
+    - patient-reported negatives
+  exclude:
+    - clinician observations
+    - diagnoses
+    - treatment plans
+
+Physical_Examination:
+  include:
+    - clinician-observed findings
+    - physical signs
+  exclude:
+    - patient-reported symptoms
+    - lab values
+    - diagnostic interpretations
+
+Results:
+  include:
+    - laboratory findings
+    - imaging findings
+    - diagnostic test results
+  exclude:
+    - interpretation beyond description
+    - treatment decisions
+
+Assessment_and_Plan:
+  include:
+    - clinical assessment
+    - medical reasoning
+    - treatment plan
+    - follow-up instructions
+  exclude:
+    - speculative diagnoses
+    - unsupported recommendations

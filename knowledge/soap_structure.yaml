@@ -1,0 +1,31 @@
+SOAP:
+  Subjective:
+    description: >
+      Information reported directly by the patient, including symptoms,
+      concerns, and medical history relevant to the current visit.
+    sections:
+      - Chief Complaint
+      - History of Present Illness
+      - Review of Systems
+
+  Objective:
+    description: >
+      Clinician-observed and measured findings obtained during examination
+      or diagnostic testing.
+    sections:
+      - Physical Examination
+      - Results
+
+  Assessment:
+    description: >
+      Clinical interpretation and reasoning based on subjective and
+      objective information.
+    sections:
+      - Assessment
+
+  Plan:
+    description: >
+      Proposed management strategy, including treatment, follow-up,
+      and preventive care.
+    sections:
+      - Plan
