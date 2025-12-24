@@ -1,0 +1,10 @@
+[
+  {
+    "id": "H1",
+    "dialogue": "[doctor] Hello, what brings you in today?\n[patient] I've had back pain for four days after lifting boxes.\n[patient] I was diagnosed with diabetes two years ago.\n[patient] I take metformin daily.\n[patient] My father had heart disease.\n[doctor] On physical exam, your back is tender.\n[doctor] Your blood pressure is slightly elevated."
+  },
+  {
+    "id": "H2",
+    "dialogue": "[doctor] What seems to be the problem?\n[patient] I've been coughing for a week.\n[patient] No fever.\n[doctor] Lungs are clear on auscultation."
+  }
+]

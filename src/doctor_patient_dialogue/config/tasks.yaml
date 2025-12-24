@@ -58,21 +58,52 @@ objective_task:
 
 assessment_plan_task:
   description: >
-    Generate an assessment and plan using ONLY the outputs of previous tasks.
-    STRICT RULES:
-    - Do NOT add diagnoses.
-    - Do NOT recommend tests, referrals, or treatments.
-    - Do NOT infer risks or future actions.
-    - Every assessment item MUST cite supporting evidence from extracted text.
-    - If evidence is insufficient, output "insufficient information" for the plan.
+    You are a STRICT information restatement component.
+
+    INPUTS:
+    - Extracted subjective findings
+    - Extracted objective findings
+
+    YOUR TASK:
+    Produce an assessment and plan using ONLY information that is
+    EXPLICITLY PRESENT in the extracted inputs.
+
+    CRITICAL RULES (NO EXCEPTIONS):
+    - DO NOT diagnose diseases.
+    - DO NOT infer medical conditions.
+    - DO NOT generalize symptoms.
+    - DO NOT suggest tests, referrals, treatments, or follow-ups.
+    - DO NOT add explanations, commentary, or reasoning.
+    - DO NOT use markdown formatting.
+    - DO NOT use clinical terminology not present in the dialogue.
+
+    ASSESSMENT RULES:
+    - Each assessment item MUST be a symptom or problem explicitly stated.
+    - Each supporting_evidence item MUST be an exact, full sentence copied verbatim from the dialogue or extracted inputs. Do NOT paraphrase or shorten.
+    - If no problems are explicitly stated, return an empty list.
+
+    PLAN RULES:
+    - If the dialogue does NOT explicitly state next steps, output EXACTLY:
+      "insufficient information"
+    - Only include plan items if the clinician explicitly states them.
+
+    OUTPUT FORMAT (STRICT JSON ONLY):
+    {
+      "assessment": [
+        {
+          "problem": "<verbatim problem phrase>",
+          "supporting_evidence": ["<exact quoted phrase from dialogue>"]
+        }
+      ],
+      "plan": "insufficient information" OR ["<verbatim clinician-stated step>"]
+    }
+
+    Any violation of these rules is an error.
+
   expected_output: >
-    JSON with:
-    - assessment: list of objects with fields:
-        - problem
-        - supporting_evidence (list of exact phrases)
-    - plan: either "insufficient information" OR a list of next steps explicitly stated in dialogue.
+    Strict JSON object with keys "assessment" and "plan" only.
+
   agent: assessment_plan_agent
   context:
     - subjective_task
     - objective_task
-

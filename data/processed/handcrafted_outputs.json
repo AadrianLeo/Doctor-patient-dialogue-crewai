@@ -1,0 +1,10 @@
+[
+  {
+    "id": "H1",
+    "output": "{\n  \"assessment\": [\n    {\n      \"problem\": \"back pain\",\n      \"supporting_evidence\": [\"I've had back pain for four days after lifting boxes.\"]\n    },\n    {\n      \"problem\": \"pain\",\n      \"supporting_evidence\": []\n    }\n  ],\n  \"plan\": \"insufficient information\"\n}"
+  },
+  {
+    "id": "H2",
+    "output": "{\n  \"assessment\": [\n    {\n      \"problem\": \"coughing\",\n      \"supporting_evidence\": [\"i've been coughing for a week.\", \"i’ve been coughing for a week. no fever.\"]\n    }\n  ],\n  \"plan\": \"insufficient information\"\n}"
+  }
+]
