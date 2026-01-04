@@ -7,6 +7,7 @@ from doctor_patient_dialogue.tools.dialogue_parser import DialogueParserTool
 from doctor_patient_dialogue.tools.subjective_tool import SubjectiveExtractorTool
 from doctor_patient_dialogue.tools.objective_tool import ObjectiveExtractorTool
 from doctor_patient_dialogue.tools.history_subjective_tool import HistorySubjectiveExtractorTool
+from doctor_patient_dialogue.tools.llm_fallback_plan_tool import LLMFallbackPlanTool
 
 
 
@@ -100,6 +101,25 @@ class DoctorPatientDialogue():
             config=self.tasks_config["assessment_plan_task"]
         )
 
+    @agent
+    def care_plan_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config["care_plan_agent"],
+            tools=[LLMFallbackPlanTool()],
+            memory=False,
+            # Needs enough iterations to (optionally) call the tool once and
+            # then emit the final strict JSON.
+            max_iter=4,
+            verbose=False,
+            allow_delegation=False,
+        )
+
+    @task
+    def care_plan_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["care_plan_task"]
+        )
+
 
 
     @crew
@@ -108,6 +128,7 @@ class DoctorPatientDialogue():
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
-            verbose=True,
-            max_iterations=1,
+            verbose=False,
+            # Must be high enough to execute the full sequential task list.
+            max_iterations=10,
         )

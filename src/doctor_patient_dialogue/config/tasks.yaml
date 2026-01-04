@@ -54,51 +54,60 @@ objective_task:
     - parse_dialogue_task
 
 
-
-
 assessment_plan_task:
   description: >
-    You are a STRICT information restatement component.
+    You are a STRICT clinical information restatement system.
 
     INPUTS:
     - Extracted subjective findings
     - Extracted objective findings
 
     YOUR TASK:
-    Produce an assessment and plan using ONLY information that is
-    EXPLICITLY PRESENT in the extracted inputs.
+    Produce an assessment and plan using ONLY information
+    explicitly stated in the extracted inputs.
 
-    CRITICAL RULES (NO EXCEPTIONS):
-    - DO NOT diagnose diseases.
-    - DO NOT infer medical conditions.
-    - DO NOT generalize symptoms.
-    - DO NOT suggest tests, referrals, treatments, or follow-ups.
-    - DO NOT add explanations, commentary, or reasoning.
-    - DO NOT use markdown formatting.
-    - DO NOT use clinical terminology not present in the dialogue.
+    ABSOLUTE RULES (NO EXCEPTIONS):
+    - DO NOT infer, diagnose, or generalize.
+    - DO NOT split one sentence into multiple problems unless they were stated separately.
+    - DO NOT paraphrase.
+    - DO NOT reuse the same sentence as evidence for multiple problems.
+    - DO NOT add medical terminology not present in the dialogue.
+    - DO NOT add explanations, thoughts, or commentary.
+    - OUTPUT STRICT JSON ONLY.
 
     ASSESSMENT RULES:
-    - Each assessment item MUST be a symptom or problem explicitly stated.
-    - Each supporting_evidence item MUST be an exact, full sentence copied verbatim from the dialogue or extracted inputs. Do NOT paraphrase or shorten.
-    - If no problems are explicitly stated, return an empty list.
+    - Each problem MUST be copied verbatim from patient or clinician text.
+    - Each supporting_evidence MUST be the FULL exact sentence where that problem appears.
+    - If multiple symptoms appear in ONE sentence, create ONE assessment item only.
+    - Duration, severity, frequency, or intensity MUST NOT be separate problems.
+    - Duration and severity MUST be included only as supporting_evidence.
+
+
 
     PLAN RULES:
-    - If the dialogue does NOT explicitly state next steps, output EXACTLY:
+    - If no explicit clinician-stated plan exists, output EXACTLY:
       "insufficient information"
-    - Only include plan items if the clinician explicitly states them.
+    - Only include plan steps if explicitly stated by the clinician.
 
-    OUTPUT FORMAT (STRICT JSON ONLY):
+    CRITICAL JSON STRUCTURE:
+    - "assessment" MUST be a JSON array (use square brackets [])
+    - Each assessment item MUST be a JSON object (use curly braces {})
+    - NEVER use numeric keys like 0:, 1:, 2: — these break JSON syntax
+    - Example CORRECT: {"assessment": [{"problem": "fever", "supporting_evidence": ["..."]}]}
+    - Example WRONG: {"assessment": {0: {"problem": "fever"}}} ← INVALID
+
+    OUTPUT FORMAT (STRICT JSON):
     {
       "assessment": [
         {
-          "problem": "<verbatim problem phrase>",
-          "supporting_evidence": ["<exact quoted phrase from dialogue>"]
+          "problem": "<exact phrase>",
+          "supporting_evidence": ["<exact full sentence>"]
         }
       ],
-      "plan": "insufficient information" OR ["<verbatim clinician-stated step>"]
+      "plan": "<clinician-stated plan or 'insufficient information'>"
     }
 
-    Any violation of these rules is an error.
+    Any deviation is an error.
 
   expected_output: >
     Strict JSON object with keys "assessment" and "plan" only.
@@ -107,3 +116,53 @@ assessment_plan_task:
   context:
     - subjective_task
     - objective_task
+
+
+care_plan_task:
+  description: >
+    You are a CONTROLLED care-plan selection layer.
+
+    INPUTS AVAILABLE TO YOU:
+    - The strict assessment/plan JSON produced earlier.
+    - The parsed dialogue (speaker turns).
+    - retrieved_dataset_plans: a list of dataset plan candidates, each like:
+      {"case_id": "...", "plan_text": "...", "score": <int>}
+
+    retrieved_dataset_plans:
+    {retrieved_dataset_plans}
+
+    HARD RULES:
+    - Plan Type A (DATASET) is preferred.
+      If retrieved_dataset_plans is non-empty, you MUST:
+        (1) Select the FIRST candidate in the list (do NOT judge relevance)
+        (2) Return its plan_text verbatim or with only light cleanup (whitespace/bullets)
+        (3) Set plan_type = "dataset" and include source_case_id from that item
+        (4) Set disclaimer to an empty string
+        (5) You MUST NOT call any tools. Tool use in this case is forbidden.
+    - Plan Type B (LLM FALLBACK) is ONLY allowed when retrieved_dataset_plans is empty.
+      If it is empty, you MUST:
+        (1) Call llm_fallback_plan EXACTLY ONCE
+        (2) Call it with:
+            - dialogue: the full raw transcript (the original input dialogue)
+            - assessment_plan_json: the strict JSON from assessment_plan_task
+        (3) Use the returned plan_text and disclaimer
+        (4) Set plan_type = "llm_fallback" and include source_case_id as empty string
+    - These two MUST NEVER be mixed.
+    - Do NOT diagnose, do NOT suggest antibiotics, and do NOT give dosing beyond label instructions.
+    - OUTPUT STRICT JSON ONLY. No markdown. No commentary.
+    - Your final answer MUST be the JSON object only (the first non-whitespace character must be '{').
+
+    OUTPUT JSON FORMAT (STRICT):
+    {
+      "plan_type": "dataset" | "llm_fallback",
+      "source_case_id": "<dataset case id or empty string>",
+      "plan_text": "<plan text>",
+      "disclaimer": "<required for llm_fallback, empty for dataset>"
+    }
+
+  expected_output: >
+    Strict JSON object with keys: plan_type, source_case_id, plan_text, disclaimer.
+  agent: care_plan_agent
+  context:
+    - parse_dialogue_task
+    - assessment_plan_task

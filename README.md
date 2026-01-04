@@ -39,6 +39,20 @@ This command initializes the doctor_patient_dialogue Crew, assembling the agents
 
 This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
 
+## Running the Streamlit Consultation UI
+
+From the project root:
+
+```bash
+# (recommended) use the workspace venv
+./.venv/Scripts/python -m streamlit run ./app/streamlit_app.py
+```
+
+Notes:
+- The UI runs a multi-turn Q&A driven by retrieval from the JSON datasets.
+- CrewAI is invoked exactly once when you click **Stop and generate summary**.
+- Saved consultations are written to `data/processed/consultations/` as JSON.
+
 ## Understanding Your Crew
 
 The doctor_patient_dialogue Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
